@@ -137,7 +137,7 @@
 
 // major.minor.revision
 static const char* VERSION_STRING=
-        "hstr version \"3.1.0\" (2023-04-18T08:50:00)"
+        "hstr version \"3.2.0\" (2025-05-18T07:30:00)"
         "\n";
 
 static const char* HSTR_VIEW_LABELS[]={
@@ -1251,7 +1251,7 @@ void hide_notification(void)
     }
 }
 
-void loop_to_select(void)
+void loop_to_select(bool ttyInit)
 {
     signal(SIGINT, signal_callback_handler_ctrl_c);
 
@@ -1261,7 +1261,11 @@ void loop_to_select(void)
         isSubshellHint=TRUE;
     }
 
-    hstr_curses_start();
+    FILE *tty_in = hstr_curses_start(ttyInit);
+    if(ttyInit && tty_in==NULL) {
+        hstr_exit(EXIT_FAILURE);
+    }
+
     // TODO move the code below to hstr_curses
     color_init_pair(HSTR_COLOR_NORMAL, -1, -1);
     if(hstr->theme & HSTR_THEME_COLOR) {
@@ -1589,13 +1593,14 @@ void loop_to_select(void)
             if(!isSubshellHint) {
                 editCommand=TRUE;
             } else {
-                // Not setting editCommand to TRUE here,
-                // because else an unnecessary blank line gets emitted before returning to prompt.
+                // not setting editCommand to TRUE here,
+                // because else an unnecessary blank line
+                // gets emitted before returning to prompt
             }
             if(selectionCursorPosition!=SELECTION_CURSOR_IN_PROMPT) {
                 result=getResultFromSelection(selectionCursorPosition, hstr, result);
                 if(hstr->view==HSTR_VIEW_FAVORITES) {
-                    favorites_choose(hstr->favorites,result);
+                    favorites_choose(hstr->favorites, result);
                 }
             } else {
                 result=pattern;
@@ -1638,17 +1643,25 @@ void loop_to_select(void)
     hstr_curses_stop(hstr->keepPage);
 
     if(result!=NULL) {
+        int fd = tty_in ? fileno(tty_in) : 0;
+
         if(fixCommand) {
-            fill_terminal_input("fc \"", FALSE);
+            fill_terminal_input("fc \"", FALSE, fd);
         }
-        fill_terminal_input(result, editCommand);
+        fill_terminal_input(result, editCommand, fd);
         if(fixCommand) {
-            fill_terminal_input("\"", FALSE);
+            fill_terminal_input("\"", FALSE, fd);
         }
         if(executeResult) {
             // TODO w/o TIOCSTI the command is NOT executed, just shown in the prompt
-            fill_terminal_input("\n", FALSE);
+            fill_terminal_input("\n", FALSE, fd);
         }
+    }
+
+    // close the terminal input file opened when HSTR reads history from pipe
+    if(tty_in) {
+        fclose(tty_in);
+        tty_in=NULL;
     }
 }
 
@@ -1675,11 +1688,52 @@ void hstr_assemble_cmdline_pattern(int argc, char* argv[], int startIndex)
 
 void hstr_interactive(void)
 {
-    hstr->history=prioritized_history_create(hstr->bigKeys, hstr->blacklist.set);
+    HISTORY_STATE* historyState=NULL;
+    if(!isatty(fileno(stdin))) {
+        // load history (or alternative content) from stdin
+        int MAX_STDIN_ENTRIES = 2000;
+
+        historyState = malloc(sizeof(HISTORY_STATE));
+        if (!historyState) {
+            fprintf(stderr, "Failed to allocate memory for history state\n");
+            hstr_exit(EXIT_FAILURE);
+        }
+        memset(historyState, 0, sizeof(HISTORY_STATE));
+        historyState->entries = malloc(sizeof(HIST_ENTRY*) * MAX_STDIN_ENTRIES);
+
+        FILE *fp = stdin;
+        if(fp == NULL) {
+            fprintf(stderr, "Error opening stdin\n");
+            hstr_exit(EXIT_FAILURE);
+        }
+        char *line = NULL;
+        size_t len = 0;
+        ssize_t read;
+        historyState->length=0;
+        while ((read = getline(&line, &len, stdin)) != -1 && historyState->length < MAX_STDIN_ENTRIES) {
+            if (read > 0 && line[read-1] == '\n') {
+            line[read-1] = '\0';
+            }
+
+            historyState->entries[historyState->length] = malloc(sizeof(HIST_ENTRY));
+            historyState->entries[historyState->length]->line = strdup(line);
+            historyState->entries[historyState->length]->timestamp = 0;
+
+            historyState->length++;
+        }
+        if (line) {
+            free(line);
+        }
+
+        fclose(fp);
+    }
+
+    hstr->history=prioritized_history_create(hstr->bigKeys, hstr->blacklist.set, historyState);
+
     if(hstr->history) {
         history_mgmt_open();
         if(hstr->interactive) {
-            loop_to_select();
+            loop_to_select(!isatty(fileno(stdin)));
         } else {
             stdout_history_and_return();
         }
@@ -1715,7 +1769,7 @@ void hstr_getopt(int argc, char **argv)
             hstr_exit(EXIT_SUCCESS);
             break;
         case 'i':
-            fill_terminal_input(optarg, FALSE);
+            fill_terminal_input(optarg, FALSE, 0);
             hstr_exit(EXIT_SUCCESS);
             break;
         case 'V':
