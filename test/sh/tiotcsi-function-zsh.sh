@@ -87,7 +87,7 @@ export HSTR_TIOCSTI=n
 
 hstr_no_tiocsti() {
     zle -I
-    { HSTR_OUT="$( { </dev/tty hstr ${BUFFER}; } 2>&1 1>&3 3>&- )"; } 3>&1;
+    { HSTR_OUT="$( { echo ${BUFFER} | hstr </dev/tty; } 2>&1 1>&3 3>&- )"; } 3>&1;
     BUFFER="${HSTR_OUT}"
     CURSOR=${#BUFFER}
     zle redisplay

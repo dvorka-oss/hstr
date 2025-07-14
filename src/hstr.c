@@ -403,7 +403,7 @@ void print_zsh_install_code(void)
 #endif
 
         "\n    zle -I"
-        "\n    { HSTR_OUT=\"$( { </dev/tty hstr ${BUFFER}; } 2>&1 1>&3 3>&- )\"; } 3>&1;"
+        "\n    { HSTR_OUT=\"$( { echo ${BUFFER} | hstr </dev/tty; } 2>&1 1>&3 3>&- )\"; } 3>&1;"
         "\n    BUFFER=\"${HSTR_OUT}\""
         "\n    CURSOR=${#BUFFER}"
         "\n    zle redisplay"
