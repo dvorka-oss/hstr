@@ -34,7 +34,7 @@ _hstr()
         esac
         case $cur in
                 -*)
-                        OPTS="--favorites --kill-last-command --non-interactive --show-configuration --show-zsd-configuration --show-blacklist --version --help"
+                        OPTS="--favorites --kill-last-command --non-interactive --show-configuration --show-bash-configuration --show-zsh-configuration --show-blacklist --version --help"
                         COMPREPLY=( $(compgen -W "${OPTS[*]}" -- $cur) )
                         return 0
                         ;;
