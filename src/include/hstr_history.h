@@ -30,6 +30,7 @@
 #include "radixsort.h"
 #include "hstr_favorites.h"
 
+#define ENV_VAR_HSTRFILE "HSTRFILE"
 #define ENV_VAR_HISTFILE "HISTFILE"
 
 #define FILE_DEFAULT_HISTORY ".bash_history"

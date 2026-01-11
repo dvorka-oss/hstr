@@ -47,7 +47,10 @@ unsigned history_ranking_function(unsigned rank, int newOccurenceOrder, size_t l
 
 char* get_history_file_name(void)
 {
-    char* historyFile = getenv(ENV_VAR_HISTFILE);
+    char* historyFile = getenv(ENV_VAR_HSTRFILE);
+    if(!historyFile || strlen(historyFile)==0) {
+        historyFile = getenv(ENV_VAR_HISTFILE);
+    }
     if(!historyFile || strlen(historyFile)==0) {
         if(is_zsh_parent_shell()) {
             historyFile = get_home_file_path(FILE_ZSH_HISTORY);
