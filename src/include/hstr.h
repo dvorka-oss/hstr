@@ -21,6 +21,8 @@
 
 #include <getopt.h>
 #include <locale.h>
+#include <sys/select.h>
+#include <unistd.h>
 #ifdef __APPLE__
   #include <curses.h>
 #elif defined(__FreeBSD__)
