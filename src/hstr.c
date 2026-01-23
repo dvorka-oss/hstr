@@ -1856,7 +1856,7 @@ int hstr_main(int argc, char* argv[])
     is_tiocsti = is_tiocsti_supported();
 #endif
 
-    // check if configuration warning dialog is needed
+    // check if configuration warning is needed
     if (!is_tiocsti) {
         char *tiocsti_env = getenv(HSTR_ENV_VAR_TIOCSTI);
         char *suppress_warning = getenv(HSTR_ENV_VAR_SUPPRESS_WARNING);
