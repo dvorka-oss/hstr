@@ -1,7 +1,7 @@
 /*
  hstr.c     HSTR shell history completion utility
 
- Copyright (C) 2014-2025 Martin Dvorak <martin.dvorak@mindforger.com>
+ Copyright (C) 2014-2026 Martin Dvorak <martin.dvorak@mindforger.com>
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -137,7 +137,7 @@
 
 // major.minor.revision
 static const char* VERSION_STRING=
-        "hstr version \"3.2.0\" (2025-05-18T07:30:00)"
+        "hstr version \"3.2.0\" (2026-01-23T23:09:00)"
         "\n";
 
 static const char* HSTR_VIEW_LABELS[]={
