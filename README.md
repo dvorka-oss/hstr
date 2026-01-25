@@ -84,9 +84,26 @@ hstr --show-zsh-configuration >> ~/.zshrc
 
 For detailed HSTR configuration documentation please refer to [Configuration](CONFIGURATION.md).
 
+## Tips
+Tips and tricks:
+
+* [How to hide commands from your history](./TIPS.md)
+* [How to use command tags for fast lookup](./TIPS.md)
+* [How to get suggestions from standard input](./TIPS.md)
+* [How to curate your favorite commands](./TIPS.md)
+
+
 ## In the News
 
-Read about HSTR in [LinuxMagazine](http://www.linux-magazine.com/Issues/2014/164/Bash-History-on-Steroids), [UbuntuGeek](http://www.ubuntugeek.com/tag/hstr-bash-history), [DebianAdmin](http://www.debianadmin.com/hstr-easily-view-navigate-search-and-use-your-command-history-with-shell-history.html), [Tuxdiary](http://tuxdiary.com/2015/02/17/hstr/), [Softpedia](http://linux.softpedia.com/get/Terminals/BASH-Command-History-Completion-103155.shtml) and [OSTechNix](https://www.ostechnix.com/hstr-easily-view-navigate-search-manage-commandline-history/).
+Read about HSTR in:
+
+* [LinuxMagazine](http://www.linux-magazine.com/Issues/2014/164/Bash-History-on-Steroids)
+* [UbuntuGeek](http://www.ubuntugeek.com/tag/hstr-bash-history)
+* [DebianAdmin](http://www.debianadmin.com/hstr-easily-view-navigate-search-and-use-your-command-history-with-shell-history.html)
+* [Tuxdiary](http://tuxdiary.com/2015/02/17/hstr/)
+* [Softpedia](http://linux.softpedia.com/get/Terminals/BASH-Command-History-Completion-103155.shtml)
+* [OSTechNix](https://www.ostechnix.com/hstr-easily-view-navigate-search-manage-commandline-history/)
+
 
 ## Documentation
 
@@ -96,7 +113,7 @@ Check man page:
 man hstr
 ```
 
-User videos: [Zack](https://www.youtube.com/watch?v=Qd75pIeQkH8), [Dvorka](https://www.youtube.com/watch?v=sPF29NyXe2U) and [Yu-Jie Lin](https://www.youtube.com/watch?v=Qx5n_5B5xUw).
+User videos: [Zack](https://www.youtube.com/watch?v=Qd75pIeQkH8), [Dvorka](https://www.youtube.com/watch?v=sPF29NyXe2U), [Yayuuu](https://www.reddit.com/r/commandline/comments/1lo5up5/hstr_tiny_bash_script_that_helps_you_browse_and/), and [Yu-Jie Lin](https://www.youtube.com/watch?v=Qx5n_5B5xUw).
 
 ## Bugs
 

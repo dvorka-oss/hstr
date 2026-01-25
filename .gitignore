@@ -36,3 +36,4 @@ test/hstr-unit-tests
 /hstr.pro.user*
 *.stash
 *.save
+/.vibe
