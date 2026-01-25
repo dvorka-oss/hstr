@@ -203,6 +203,7 @@ static const char* HELP_STRING=
         "\n  --show-zsh-configuration  -Z ... show zsh configuration to be added to ~/.zshrc"
         "\n  --show-blacklist          -b ... show commands to skip on history indexation"
         "\n  --is-tiocsti              -t ... detect whether TIOCSTI is supported and print y or n"
+        // IMPROVE: insert in terminal will work w/ kernels >= 6.2.0 - hide if TIOCSTI is not supported
         "\n  --insert-in-terminal=[c]  -i ... insert command c in terminal prompt and exit"
         "\n  --version                 -V ... show version details"
         "\n  --help                    -h ... help"
@@ -279,6 +280,11 @@ static Hstr* hstr;
 
 bool show_tiocsti_configuration_warning(void)
 {
+    // If stdin or stderr is not a TTY, don't prompt interactively to avoid invisible hangs
+    if (!isatty(STDIN_FILENO) || !isatty(STDERR_FILENO)) {
+        return false;
+    }
+
     bool is_zsh = is_zsh_parent_shell();
     const char *shell_name = is_zsh ? "zsh" : "bash";
     const char *config_cmd = is_zsh ?
