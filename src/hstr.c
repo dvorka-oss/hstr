@@ -1862,6 +1862,10 @@ void hstr_interactive(void)
 
     hstr->history=prioritized_history_create(hstr->bigKeys, hstr->blacklist.set, historyState);
 
+    if(hstr->readingFromPipe) {
+        free_history_state(historyState);
+    }
+
     if(hstr->history) {
         history_mgmt_open();
         if(hstr->interactive) {

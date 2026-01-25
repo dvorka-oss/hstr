@@ -261,12 +261,10 @@ HistoryItems* prioritized_history_create(int optionBigKeys, HashSet *blacklist, 
         radixsort_destroy(&rs);
 
         // history/readline cleanup, clear_history() called on exit as entries are used by raw view
-        free(historyState);
         return prioritizedHistory;
     } else {
         // history/readline cleanup, clear_history() called on exit as entries are used by raw view
         printf("No history - nothing to suggest...\n");
-        free(historyState);
         return NULL;
     }
 
