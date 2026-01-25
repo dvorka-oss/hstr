@@ -215,6 +215,8 @@ static const char* HELP_STRING=
 // TODO help screen - curses window (tig)
 static const char* LABEL_HELP=
         "Type to filter, UP/DOWN move, RET/TAB select, DEL remove, C-f add favorite, C-g cancel";
+static const char* LABEL_HELP_PIPE=
+        "Type to filter, UP/DOWN move, RET/TAB select, C-g cancel";
 
 #define GETOPT_NO_ARGUMENT           0
 #define GETOPT_REQUIRED_ARGUMENT     1
@@ -274,6 +276,7 @@ typedef struct {
     int promptItems;
 
     bool noIoctl;
+    bool readingFromPipe;
 } Hstr;
 
 static Hstr* hstr;
@@ -397,6 +400,7 @@ void hstr_init(void)
      =0;
 
     hstr->noIoctl=false;
+    hstr->readingFromPipe=false;
 }
 
 void hstr_destroy(void)
@@ -768,7 +772,8 @@ void print_help_label(void)
     int cursorY=getcury(stdscr);
 
     char screenLine[CMDLINE_LNG];
-    snprintf(screenLine, getmaxx(stdscr), "%s", LABEL_HELP);
+    const char* label = hstr->readingFromPipe ? LABEL_HELP_PIPE : LABEL_HELP;
+    snprintf(screenLine, getmaxx(stdscr), "%s", label);
     mvprintw(hstr->promptYHelp, 0, "%s", screenLine); clrtoeol();
     refresh();
 
@@ -1281,7 +1286,8 @@ int remove_from_history_model(char* almostDead)
         // raw & ranked history is pruned first as its items point to system history lines
         int systemOccurences=0, rawOccurences=history_mgmt_remove_from_raw(almostDead, hstr->history);
         history_mgmt_remove_from_ranked(almostDead, hstr->history);
-        if(rawOccurences) {
+        // do NOT mutate system history when reading from pipe
+        if(rawOccurences && !hstr->readingFromPipe) {
             systemOccurences=history_mgmt_remove_from_system_history(almostDead);
         }
         if(systemOccurences!=rawOccurences && hstr->debugLevel>HSTR_DEBUG_LEVEL_NONE) {
@@ -1418,7 +1424,7 @@ void loop_to_select(bool ttyInit)
             // avoids printing of wild chars in search prompt
             break;
         case KEY_DC: // DEL
-            if(selectionCursorPosition!=SELECTION_CURSOR_IN_PROMPT) {
+            if(!hstr->readingFromPipe && selectionCursorPosition!=SELECTION_CURSOR_IN_PROMPT) {
                 almostDead=getResultFromSelection(selectionCursorPosition, hstr, result);
                 msg=malloc(strlen(almostDead)+1);
                 strcpy(msg, almostDead);
@@ -1773,6 +1779,7 @@ void hstr_interactive(void)
     HISTORY_STATE* historyState=NULL;
     if(!isatty(fileno(stdin))) {
         // load history (or alternative content) from stdin
+        hstr->readingFromPipe=true;
         int MAX_STDIN_ENTRIES = 2000;
 
         historyState = malloc(sizeof(HISTORY_STATE));
@@ -1819,7 +1826,9 @@ void hstr_interactive(void)
         } else {
             stdout_history_and_return();
         }
-        history_mgmt_flush();
+        if(!hstr->readingFromPipe) {
+            history_mgmt_flush();
+        }
     } // else (no history) handled in create() method
 
     hstr_exit(EXIT_SUCCESS);
