@@ -141,7 +141,7 @@
 
 // major.minor.revision
 static const char* VERSION_STRING=
-        "hstr version \"3.2.0\" (2026-01-23T23:09:00)"
+        "hstr version \"3.2.0\" (2026-01-25T23:09:00)"
         "\n";
 
 static const char* HSTR_VIEW_LABELS[]={
@@ -298,21 +298,9 @@ bool show_tiocsti_configuration_warning(void)
         "\n"
         "  %s\n"
         "\n"
-        "What this does:\n"
-        "  - Adds a shell function that replaces TIOCSTI functionality\n"
-        "  - Sets HSTR_TIOCSTI=n to indicate configuration is complete\n"
-        "  - Binds Ctrl-R to invoke HSTR properly\n"
-        "\n"
-        "Once configured, HSTR will work as expected.\n"
-        "\n"
-        "For more information:\n"
-        "  https://github.com/dvorka/hstr/blob/master/CONFIGURATION.md\n"
-        "\n"
-        "===\n"
-        "\n"
         "Choose an option:\n"
-        "  [E] Exit and configure HSTR (recommended)\n"
-        "  [c] Continue anyway\n"
+        "  [E] exit and configure HSTR (recommended)\n"
+        "  [c] continue anyway\n"
         "\n"
         "To suppress this warning: export HSTR_SUPPRESS_TIOCSTI_WARNING=1\n"
         "\n"
@@ -340,7 +328,7 @@ bool show_tiocsti_configuration_warning(void)
             choice = tolower((unsigned char)input[0]);
         }
     } else if (ret == 0) {
-        fprintf(stderr, "\n\nTimeout - exiting. Run with HSTR_SUPPRESS_TIOCSTI_WARNING=1 to skip.\n");
+        fprintf(stderr, "\n\nTimeout - exiting!\n");
         choice = 'e';
     } else {
         choice = 'e';
@@ -350,7 +338,8 @@ bool show_tiocsti_configuration_warning(void)
         fprintf(stderr, "\nContinuing in 'print commands only' mode...\n\n");
         return true;
     } else {
-        fprintf(stderr, "\nExiting to let you configure HSTR...\n\n");
+        // exiting to let user configure HSTR
+        fprintf(stderr, "\n");
         return false;
     }
 }
