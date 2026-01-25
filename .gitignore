@@ -14,7 +14,10 @@
 /src/hh
 .deps/
 .vscode
-Makefile
+/Makefile
+/man/Makefile
+/src/Makefile
+/test/Makefile
 Makefile.in
 *.o
 *.pro.user
