@@ -1870,7 +1870,7 @@ int hstr_main(int argc, char* argv[])
                     strcmp(argv[i], "--non-interactive") == 0 || strcmp(argv[i], "-n") == 0 ||
                     strcmp(argv[i], "--kill-last-command") == 0 || strcmp(argv[i], "-k") == 0 ||
                     strcmp(argv[i], "--show-blacklist") == 0 || strcmp(argv[i], "-b") == 0 ||
-                    strcmp(argv[i], "--insert-in-terminal") == 0 || strcmp(argv[i], "-i") == 0) {
+                    strncmp(argv[i], "--insert-in-terminal", 20) == 0 || strncmp(argv[i], "-i", 2) == 0) {
                     skip_check = true;
                     break;
                 }
