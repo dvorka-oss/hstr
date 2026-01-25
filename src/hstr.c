@@ -1301,6 +1301,11 @@ void hstr_next_view(void)
 {
     hstr->view++;
     hstr->view=hstr->view%3;
+    // skip favorites view when reading from pipe (favorites can't be written/modified)
+    if(hstr->readingFromPipe && hstr->view==HSTR_VIEW_FAVORITES) {
+        hstr->view++;
+        hstr->view=hstr->view%3;
+    }
 }
 
 void stdout_history_and_return(void)
