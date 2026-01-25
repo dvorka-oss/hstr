@@ -410,8 +410,8 @@ void hstr_destroy(void)
     // blacklist is allocated by hstr struct
     blacklist_destroy(&hstr->blacklist, false);
     prioritized_history_destroy(hstr->history);
-    if(hstr->selection) free(hstr->selection);
-    if(hstr->selectionRegexpMatch) free(hstr->selectionRegexpMatch);
+    free(hstr->selection); // free(NULL) is safe per C standard
+    free(hstr->selectionRegexpMatch);
     free(hstr);
 }
 
@@ -1779,6 +1779,22 @@ void hstr_assemble_cmdline_pattern(int argc, char* argv[], int startIndex)
     }
 }
 
+static void free_history_state(HISTORY_STATE* historyState)
+{
+    if (!historyState) return;
+
+    if (historyState->entries) {
+        for (int i = 0; i < historyState->length; i++) {
+            if (historyState->entries[i]) {
+                free(historyState->entries[i]->line);
+                free(historyState->entries[i]);
+            }
+        }
+        free(historyState->entries);
+    }
+    free(historyState);
+}
+
 void hstr_interactive(void)
 {
     HISTORY_STATE* historyState=NULL;
@@ -1793,31 +1809,53 @@ void hstr_interactive(void)
             hstr_exit(EXIT_FAILURE);
         }
         memset(historyState, 0, sizeof(HISTORY_STATE));
+
         historyState->entries = malloc(sizeof(HIST_ENTRY*) * MAX_STDIN_ENTRIES);
+        if (!historyState->entries) {
+            fprintf(stderr, "Failed to allocate memory for history entries\n");
+            free_history_state(historyState);
+            hstr_exit(EXIT_FAILURE);
+        }
 
         FILE *fp = stdin;
         if(fp == NULL) {
             fprintf(stderr, "Error opening stdin\n");
+            free_history_state(historyState);
             hstr_exit(EXIT_FAILURE);
         }
+
         char *line = NULL;
         size_t len = 0;
         ssize_t read;
         historyState->length=0;
         while ((read = getline(&line, &len, stdin)) != -1 && historyState->length < MAX_STDIN_ENTRIES) {
             if (read > 0 && line[read-1] == '\n') {
-            line[read-1] = '\0';
+                line[read-1] = '\0';
             }
 
             historyState->entries[historyState->length] = malloc(sizeof(HIST_ENTRY));
+            if (!historyState->entries[historyState->length]) {
+                fprintf(stderr, "Failed to allocate memory for history entry\n");
+                free(line);
+                free_history_state(historyState);
+                hstr_exit(EXIT_FAILURE);
+            }
+
             historyState->entries[historyState->length]->line = strdup(line);
-            historyState->entries[historyState->length]->timestamp = 0;
+            if (!historyState->entries[historyState->length]->line) {
+                fprintf(stderr, "Failed to allocate memory for history line\n");
+                free(historyState->entries[historyState->length]);
+                free(line);
+                free_history_state(historyState);
+                hstr_exit(EXIT_FAILURE);
+            }
+
+            historyState->entries[historyState->length]->timestamp = NULL;
+            historyState->entries[historyState->length]->data = NULL;
 
             historyState->length++;
         }
-        if (line) {
-            free(line);
-        }
+        free(line); // free(NULL) is safe per C standard
 
         fclose(fp);
     }

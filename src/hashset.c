@@ -135,7 +135,7 @@ void hashset_destroy(HashSet *hs, const bool freeValues)
             while(p && p->next) {
                 if(p->key) {
                     free(p->key);
-                    if(freeValues && p->value) free(p->value);
+                    if(freeValues) free(p->value); // free(NULL) is safe per C standard
                 }
                 pp=p;
                 p=p->next;
@@ -143,7 +143,7 @@ void hashset_destroy(HashSet *hs, const bool freeValues)
             }
             if(p && p->key) {
                 free(p->key);
-                if(freeValues && p->value) free(p->value);
+                if(freeValues) free(p->value);
                 free(p);
             }
         }
