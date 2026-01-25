@@ -174,6 +174,7 @@ void fill_terminal_input(char* cmd, bool padding, int fd)
                 printf("\n");
             }
         } else {
+            // non-TIOCSTI mode: always write to stderr (shell wrapper captures it)
             fprintf(stderr, "%s", cmd);
             if(padding) {
                 fprintf(stderr, "%s", "\n");

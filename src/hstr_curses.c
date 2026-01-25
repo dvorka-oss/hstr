@@ -28,7 +28,7 @@ FILE* hstr_curses_start(bool ttyInit) {
     if(ttyInit) {
         SCREEN *screen;
 
-        tty_in = fopen("/dev/tty", "r");
+        tty_in = fopen("/dev/tty", "r+");
         if (!tty_in) {
             perror("Could not open /dev/tty prior to curses initialization");
             return NULL;
