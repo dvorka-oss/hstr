@@ -1,7 +1,13 @@
-2026-01-24  Martin Dvorak  <martin.dvorak@mindforger.com>
+2026-01-25  Martin Dvorak  <martin.dvorak@mindforger.com>
 
-  * Released v3.2.0 - Minor release bringing STDIN handling and configuration
-    for TIOCSTI enforcement.
+  * Released v3.2.0 - A minor release that adds the ability to read input
+    from a pipe (instead of history) and filter it for printing via HSTR.
+    This version also introduces interactive detection of missing TIOCSTI
+    configuration.
+
+  Minor release bringing ability to read input
+    from the pipe (instead of history) and filter to print it using HSTR;
+    and interactive missing configuration detection for TIOCSTI enforcement.
 
 2023-04-18  Martin Dvorak  <martin.dvorak@mindforger.com>
 
