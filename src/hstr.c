@@ -290,10 +290,8 @@ bool show_tiocsti_configuration_warning(void)
         "=== HSTR CONFIGURATION REQUIRED ===\n"
         "\n"
         "HSTR cannot inject commands into your shell because:\n"
-        "\n"
-        "  - Your Linux kernel has TIOCSTI disabled (kernel >= 6.2.0)\n"
-        "  - Your %s configuration is missing the required HSTR function\n"
-        "\n"
+        "  - Your Linux kernel >= 6.2.0 has TIOCSTI disabled\n"
+        "  - Your %s config is missing required HSTR function\n"
         "To fix this, run:\n"
         "\n"
         "  %s\n"
@@ -309,18 +307,25 @@ bool show_tiocsti_configuration_warning(void)
     );
     fflush(stderr);
 
-    // read user input with timeout
+    // read user input with timeout (retries in case of terminal resize signal EINTR)
     char choice = '\0';
     fd_set readfds;
     struct timeval timeout;
+    int ret;
+    int retries = 0;
+    const int max_retries = 10;
+    do {
+        FD_ZERO(&readfds);
+        FD_SET(STDIN_FILENO, &readfds);
 
-    FD_ZERO(&readfds);
-    FD_SET(STDIN_FILENO, &readfds);
+        timeout.tv_sec = 30;
+        timeout.tv_usec = 0;
 
-    timeout.tv_sec = 30;
-    timeout.tv_usec = 0;
-
-    int ret = select(STDIN_FILENO + 1, &readfds, NULL, NULL, &timeout);
+        ret = select(STDIN_FILENO + 1, &readfds, NULL, NULL, &timeout);
+        if (ret == -1 && errno == EINTR) {
+            retries++;
+        }
+    } while (ret == -1 && errno == EINTR && retries < max_retries);
 
     if (ret > 0) {
         char input[10];

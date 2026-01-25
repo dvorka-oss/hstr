@@ -19,6 +19,7 @@
 #ifndef HSTR_H
 #define HSTR_H
 
+#include <errno.h>
 #include <getopt.h>
 #include <locale.h>
 #include <sys/select.h>
