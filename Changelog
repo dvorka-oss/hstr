@@ -1,3 +1,8 @@
+2026-01-24  Martin Dvorak  <martin.dvorak@mindforger.com>
+
+  * Released v3.2.0 - Minor release bringing STDIN handling and configuration
+    for TIOCSTI enforcement.
+
 2023-04-18  Martin Dvorak  <martin.dvorak@mindforger.com>
 
   * Released v3.1.0 - Minor release fixing a Bash function that is used

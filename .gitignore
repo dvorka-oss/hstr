@@ -1,5 +1,6 @@
 /autom4te.cache/
 /aclocal.m4
+/confdefs.h
 /compile
 /config.guess
 /config.log
@@ -13,7 +14,10 @@
 /src/hh
 .deps/
 .vscode
-Makefile
+/Makefile
+/man/Makefile
+/src/Makefile
+/test/Makefile
 Makefile.in
 *.o
 *.pro.user
@@ -32,3 +36,4 @@ test/hstr-unit-tests
 /hstr.pro.user*
 *.stash
 *.save
+/.vibe
