@@ -1301,7 +1301,7 @@ void hstr_next_view(void)
 {
     hstr->view++;
     hstr->view=hstr->view%3;
-    // skip favorites view when reading from pipe (favorites can't be written/modified)
+    // skip favorites view when reading from pipe
     if(hstr->readingFromPipe && hstr->view==HSTR_VIEW_FAVORITES) {
         hstr->view++;
         hstr->view=hstr->view%3;
@@ -1865,7 +1865,7 @@ void hstr_interactive(void)
     if(hstr->history) {
         history_mgmt_open();
         if(hstr->interactive) {
-            loop_to_select(!isatty(fileno(stdin)));
+            loop_to_select(hstr->readingFromPipe);
         } else {
             stdout_history_and_return();
         }
