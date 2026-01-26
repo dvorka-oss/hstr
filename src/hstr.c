@@ -22,7 +22,7 @@
 
 #define SELECTION_CURSOR_IN_PROMPT -1
 #define SELECTION_PREFIX_MAX_LNG 512
-#define CMDLINE_LNG 2048
+#define CMDLINE_LNG 8192
 #define HOSTNAME_BUFFER 128
 
 #define PG_JUMP_SIZE 10
@@ -768,7 +768,7 @@ void print_help_label(void)
     int cursorY=getcury(stdscr);
 
     char screenLine[CMDLINE_LNG];
-    snprintf(screenLine, sizeof(screenLine), "%s", LABEL_HELP);
+    snprintf(screenLine, getmaxx(stdscr), "%s", LABEL_HELP);
     mvprintw(hstr->promptYHelp, 0, "%s", screenLine); clrtoeol();
     refresh();
 
@@ -779,9 +779,9 @@ void print_confirm_delete(const char* cmd)
 {
     char screenLine[CMDLINE_LNG];
     if(hstr->view==HSTR_VIEW_FAVORITES) {
-        snprintf(screenLine, sizeof(screenLine), "Do you want to delete favorites item '%s'? y/n", cmd);
+        snprintf(screenLine, getmaxx(stdscr), "Do you want to delete favorites item '%s'? y/n", cmd);
     } else {
-        snprintf(screenLine, sizeof(screenLine), "Do you want to delete all occurrences of '%s'? y/n", cmd);
+        snprintf(screenLine, getmaxx(stdscr), "Do you want to delete all occurrences of '%s'? y/n", cmd);
     }
     // TODO make this function
     if(hstr->theme & HSTR_THEME_COLOR) {
@@ -801,9 +801,9 @@ void print_cmd_deleted_label(const char* cmd, int occurences)
 {
     char screenLine[CMDLINE_LNG];
     if(hstr->view==HSTR_VIEW_FAVORITES) {
-        snprintf(screenLine, sizeof(screenLine), "Favorites item '%s' deleted", cmd);
+        snprintf(screenLine, getmaxx(stdscr), "Favorites item '%s' deleted", cmd);
     } else {
-        snprintf(screenLine, sizeof(screenLine), "History item '%s' deleted (%d occurrence%s)", cmd, occurences, (occurences==1?"":"s"));
+        snprintf(screenLine, getmaxx(stdscr), "History item '%s' deleted (%d occurrence%s)", cmd, occurences, (occurences==1?"":"s"));
     }
     // TODO make this function
     if(hstr->theme & HSTR_THEME_COLOR) {
@@ -822,7 +822,7 @@ void print_cmd_deleted_label(const char* cmd, int occurences)
 void print_regexp_error(const char* errorMessage)
 {
     char screenLine[CMDLINE_LNG];
-    snprintf(screenLine, sizeof(screenLine), "%s", errorMessage);
+    snprintf(screenLine, getmaxx(stdscr), "%s", errorMessage);
     if(hstr->theme & HSTR_THEME_COLOR) {
         color_attr_on(COLOR_PAIR(HSTR_COLOR_DELETE));
         color_attr_on(A_BOLD);
@@ -839,7 +839,7 @@ void print_regexp_error(const char* errorMessage)
 void print_cmd_added_favorite_label(const char* cmd)
 {
     char screenLine[CMDLINE_LNG];
-    snprintf(screenLine, sizeof(screenLine), "Command '%s' added to favorites (C-/ to show favorites)", cmd);
+    snprintf(screenLine, getmaxx(stdscr), "Command '%s' added to favorites (C-/ to show favorites)", cmd);
     if(hstr->theme & HSTR_THEME_COLOR) {
         color_attr_on(COLOR_PAIR(HSTR_COLOR_INFO));
         color_attr_on(A_BOLD);
@@ -862,9 +862,9 @@ void print_history_label(void)
 
     char screenLine[CMDLINE_LNG];
 #ifdef __APPLE__
-    snprintf(screenLine, sizeof(screenLine), "- HISTORY - view:%s (C-w) - match:%s (C-e) - case:%s (C-t) - %d/%d/%d ",
+    snprintf(screenLine, width, "- HISTORY - view:%s (C-w) - match:%s (C-e) - case:%s (C-t) - %d/%d/%d ",
 #else
-    snprintf(screenLine, sizeof(screenLine), "- HISTORY - view:%s (C-/) - match:%s (C-e) - case:%s (C-t) - %d/%d/%d ",
+    snprintf(screenLine, width, "- HISTORY - view:%s (C-/) - match:%s (C-e) - case:%s (C-t) - %d/%d/%d ",
 #endif
             HSTR_VIEW_LABELS[hstr->view],
             HSTR_MATCH_LABELS[hstr->matching],
@@ -872,13 +872,9 @@ void print_history_label(void)
             hstr->history->count,
             hstr->history->rawCount,
             hstr->favorites->count);
-    unsigned lineLen = strlen(screenLine);
-    unsigned dashCount = (width > lineLen) ? (width - lineLen) : 0;
-    if (dashCount > sizeof(screenLine) - lineLen - 1) {
-        dashCount = sizeof(screenLine) - lineLen - 1;
-    }
+    width -= strlen(screenLine);
     unsigned i;
-    for(i=0; i<dashCount; i++) {
+    for(i=0; i<width; i++) {
         strcat(screenLine, "-");
     }
     if(hstr->theme & HSTR_THEME_COLOR) {
@@ -1154,10 +1150,9 @@ void hstr_print_highlighted_selection_row(char* text, int y, int width)
     char buffer[CMDLINE_LNG];
     hstr_strelide(buffer, text, width>2?width-2:0);
     char screenLine[CMDLINE_LNG];
-    unsigned maxWidth = getmaxx(stdscr);
-    snprintf(screenLine, sizeof(screenLine), "%s%-*.*s ",
+    snprintf(screenLine, getmaxx(stdscr)+1, "%s%-*.*s ",
             (terminal_has_colors()?" ":">"),
-            maxWidth-2, maxWidth-2, buffer);
+            getmaxx(stdscr)-2, getmaxx(stdscr)-2, buffer);
     mvprintw(y, 0, "%s", screenLine);
     if(hstr->theme & HSTR_THEME_COLOR) {
         color_attr_on(COLOR_PAIR(HSTR_COLOR_NORMAL));
