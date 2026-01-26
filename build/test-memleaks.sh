@@ -16,12 +16,13 @@
 
 # Run HSTR w/ 1 history entry to hunt memleaks w/ valgrind
 
-#export OPT_ALL_SCENARIOS=true
+export OPT_ALL_SCENARIOS=true
 
 # both valid and INVALID history file to be tested
 #export HISTFILE=
-export HISTFILE="/tmp/invalid-history-file-01"
+#export HISTFILE="/tmp/invalid-history-file-01"
 #export HISTFILE="~/.bash_history"
+export HISTFILE="~/.zsh_history"
 #export HISTFILE="~/.zhistory"
 #export HISTFILE="~/.zshrc"
 
@@ -67,8 +68,8 @@ fi
 # run tests w/ Valgrind
 cat ${FILE_SCENARIOS} | while read SCENARIO
 do
-    # Valgrind
-    valgrind --track-origins=yes --tool=memcheck --leak-check=full --show-leak-kinds=all ${SCENARIO}
+    # Valgrind with ncurses suppressions
+    valgrind --suppressions=build/valgrind-ncurses.supp --track-origins=yes --tool=memcheck --leak-check=full --show-leak-kinds=definite,possible ${SCENARIO}
 
     # Valgrind's GDB
     #valgrind --vgdb=yes --vgdb-error=0 --track-origins=yes --tool=memcheck --leak-check=full --show-leak-kinds=all ${SCENARIO}

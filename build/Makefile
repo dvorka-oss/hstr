@@ -41,6 +41,15 @@ help: ## make targets help
 	| awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 #
+# CODING
+#
+
+.PHONY: vibe
+vibe:
+	@ls -l ../.github/copilot*.md
+	@cd .. && copilot --allow-all-tools --banner
+
+#
 # CLEAN
 #
 
@@ -74,3 +83,19 @@ run-dev: ## run HSTR for development
 .PHONY: test
 test: ## run HSTR unit tests
 	cd ../test && qmake hstr-unit-tests.pro && make clean all && ./hstr-unit-tests
+
+.PHONY: test-memleaks
+test-memleaks: ## run HSTR memory leak tests with Valgrind
+	./test-memleaks.sh
+
+#
+# INSTALL
+#
+
+.PHONY: install-personal
+install-personal: build ## install HSTR for personal user
+	@echo "Installing HSTR $(HSTR_VERSION) for personal user..."
+	@rm -vf $(HOME)/bin/hstr
+	@cp -vf ../src/hstr $(HOME)/bin
+	@echo "HSTR $(HSTR_VERSION) installed to $(HOME)/bin"
+	hstr --version

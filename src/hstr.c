@@ -22,7 +22,7 @@
 
 #define SELECTION_CURSOR_IN_PROMPT -1
 #define SELECTION_PREFIX_MAX_LNG 512
-#define CMDLINE_LNG 2048
+#define CMDLINE_LNG 8192
 #define HOSTNAME_BUFFER 128
 
 #define PG_JUMP_SIZE 10
@@ -139,9 +139,9 @@
 #define LOGSELECTION(Y,SCREEN,MODEL)
 #endif
 
-// major.minor.revision
+// semantic versioning: major.minor.revision
 static const char* VERSION_STRING=
-        "hstr version \"3.2.0\" (2026-01-25T23:09:00)"
+        "hstr version \"3.2.0\" (2026-01-26T08:09:00)"
         "\n";
 
 static const char* HSTR_VIEW_LABELS[]={
@@ -431,7 +431,7 @@ void hstr_exit(int status)
 
 void signal_callback_handler_ctrl_c(int signum)
 {
-    if(signum==SIGINT) {
+    if(signum==SIGINT || signum==SIGQUIT) {
         history_mgmt_flush();
         hstr_curses_stop(false);
         hstr_exit(signum);
@@ -1355,6 +1355,7 @@ void hide_notification(void)
 void loop_to_select(bool ttyInit)
 {
     signal(SIGINT, signal_callback_handler_ctrl_c);
+    signal(SIGQUIT, signal_callback_handler_ctrl_c);
 
     bool isSubshellHint=FALSE;
     char* isSubshellHintText = getenv(HSTR_ENV_VAR_IS_SUBSHELL);
