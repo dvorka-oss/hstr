@@ -277,9 +277,12 @@ typedef struct {
 
     bool noIoctl;
     bool readingFromPipe;
+    HISTORY_STATE* pipeHistoryState;
 } Hstr;
 
 static Hstr* hstr;
+
+static void free_history_state(HISTORY_STATE* historyState);
 
 bool show_tiocsti_configuration_warning(void)
 {
@@ -401,6 +404,7 @@ void hstr_init(void)
 
     hstr->noIoctl=false;
     hstr->readingFromPipe=false;
+    hstr->pipeHistoryState=NULL;
 }
 
 void hstr_destroy(void)
@@ -410,6 +414,10 @@ void hstr_destroy(void)
     // blacklist is allocated by hstr struct
     blacklist_destroy(&hstr->blacklist, false);
     prioritized_history_destroy(hstr->history);
+    if(hstr->pipeHistoryState) {
+        free_history_state(hstr->pipeHistoryState);
+        hstr->pipeHistoryState = NULL;
+    }
     free(hstr->selection); // free(NULL) is safe per C standard
     free(hstr->selectionRegexpMatch);
     free(hstr);
@@ -1863,7 +1871,7 @@ void hstr_interactive(void)
     hstr->history=prioritized_history_create(hstr->bigKeys, hstr->blacklist.set, historyState);
 
     if(hstr->readingFromPipe) {
-        free_history_state(historyState);
+        hstr->pipeHistoryState=historyState;
     }
 
     if(hstr->history) {
