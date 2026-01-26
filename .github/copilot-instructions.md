@@ -41,6 +41,7 @@ This document provides instructions to the copilot AI assistants and agents.
 ## Test instructions
 
 - Test code is stored in the `tests/src` directory.
+- Use `valgrind` to check for memory leaks and memory corruption issues after code changes.
 - Tests can be run with `cd build && make test`.
 - Write backend tests for all bugs being fixed.
 - Use https://github.com/ThrowTheSwitch/Unity framework for testing.

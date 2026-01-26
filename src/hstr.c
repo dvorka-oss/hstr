@@ -1826,13 +1826,6 @@ void hstr_interactive(void)
             hstr_exit(EXIT_FAILURE);
         }
 
-        FILE *fp = stdin;
-        if(fp == NULL) {
-            fprintf(stderr, "Error opening stdin\n");
-            free_history_state(historyState);
-            hstr_exit(EXIT_FAILURE);
-        }
-
         char *line = NULL;
         size_t len = 0;
         ssize_t read;
@@ -1865,8 +1858,6 @@ void hstr_interactive(void)
             historyState->length++;
         }
         free(line); // free(NULL) is safe per C standard
-
-        fclose(fp);
     }
 
     hstr->history=prioritized_history_create(hstr->bigKeys, hstr->blacklist.set, historyState);
