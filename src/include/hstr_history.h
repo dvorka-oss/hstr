@@ -48,7 +48,7 @@ typedef struct {
 } HistoryItems;
 
 char* parse_history_line(char *l);
-HistoryItems* prioritized_history_create(int optionBigKeys, HashSet* blacklist);
+HistoryItems* prioritized_history_create(int optionBigKeys, HashSet* blacklist, HISTORY_STATE* historyState);
 void prioritized_history_destroy(HistoryItems* h);
 
 void history_mgmt_open(void);

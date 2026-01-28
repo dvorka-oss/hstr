@@ -215,6 +215,8 @@ static const char* HELP_STRING=
 // TODO help screen - curses window (tig)
 static const char* LABEL_HELP=
         "Type to filter, UP/DOWN move, RET/TAB select, DEL remove, C-f add favorite, C-g cancel";
+static const char* LABEL_HELP_PIPE=
+        "Type to filter, UP/DOWN move, RET/TAB select, C-g cancel";
 
 #define GETOPT_NO_ARGUMENT           0
 #define GETOPT_REQUIRED_ARGUMENT     1
@@ -274,9 +276,13 @@ typedef struct {
     int promptItems;
 
     bool noIoctl;
+    bool readingFromPipe;
+    HISTORY_STATE* pipeHistoryState;
 } Hstr;
 
 static Hstr* hstr;
+
+static void free_history_state(HISTORY_STATE* historyState);
 
 bool show_tiocsti_configuration_warning(void)
 {
@@ -397,6 +403,8 @@ void hstr_init(void)
      =0;
 
     hstr->noIoctl=false;
+    hstr->readingFromPipe=false;
+    hstr->pipeHistoryState=NULL;
 }
 
 void hstr_destroy(void)
@@ -406,8 +414,12 @@ void hstr_destroy(void)
     // blacklist is allocated by hstr struct
     blacklist_destroy(&hstr->blacklist, false);
     prioritized_history_destroy(hstr->history);
-    if(hstr->selection) free(hstr->selection);
-    if(hstr->selectionRegexpMatch) free(hstr->selectionRegexpMatch);
+    if(hstr->pipeHistoryState) {
+        free_history_state(hstr->pipeHistoryState);
+        hstr->pipeHistoryState = NULL;
+    }
+    free(hstr->selection); // free(NULL) is safe per C standard
+    free(hstr->selectionRegexpMatch);
     free(hstr);
 }
 
@@ -768,7 +780,8 @@ void print_help_label(void)
     int cursorY=getcury(stdscr);
 
     char screenLine[CMDLINE_LNG];
-    snprintf(screenLine, getmaxx(stdscr), "%s", LABEL_HELP);
+    const char* label = hstr->readingFromPipe ? LABEL_HELP_PIPE : LABEL_HELP;
+    snprintf(screenLine, getmaxx(stdscr), "%s", label);
     mvprintw(hstr->promptYHelp, 0, "%s", screenLine); clrtoeol();
     refresh();
 
@@ -1281,7 +1294,8 @@ int remove_from_history_model(char* almostDead)
         // raw & ranked history is pruned first as its items point to system history lines
         int systemOccurences=0, rawOccurences=history_mgmt_remove_from_raw(almostDead, hstr->history);
         history_mgmt_remove_from_ranked(almostDead, hstr->history);
-        if(rawOccurences) {
+        // do NOT mutate system history when reading from pipe
+        if(rawOccurences && !hstr->readingFromPipe) {
             systemOccurences=history_mgmt_remove_from_system_history(almostDead);
         }
         if(systemOccurences!=rawOccurences && hstr->debugLevel>HSTR_DEBUG_LEVEL_NONE) {
@@ -1295,6 +1309,11 @@ void hstr_next_view(void)
 {
     hstr->view++;
     hstr->view=hstr->view%3;
+    // skip favorites view when reading from pipe
+    if(hstr->readingFromPipe && hstr->view==HSTR_VIEW_FAVORITES) {
+        hstr->view++;
+        hstr->view=hstr->view%3;
+    }
 }
 
 void stdout_history_and_return(void)
@@ -1333,7 +1352,7 @@ void hide_notification(void)
     }
 }
 
-void loop_to_select(void)
+void loop_to_select(bool ttyInit)
 {
     signal(SIGINT, signal_callback_handler_ctrl_c);
     signal(SIGQUIT, signal_callback_handler_ctrl_c);
@@ -1344,7 +1363,11 @@ void loop_to_select(void)
         isSubshellHint=TRUE;
     }
 
-    hstr_curses_start();
+    FILE *tty_in = hstr_curses_start(ttyInit);
+    if(ttyInit && tty_in==NULL) {
+        hstr_exit(EXIT_FAILURE);
+    }
+
     // TODO move the code below to hstr_curses
     color_init_pair(HSTR_COLOR_NORMAL, -1, -1);
     if(hstr->theme & HSTR_THEME_COLOR) {
@@ -1415,7 +1438,7 @@ void loop_to_select(void)
             // avoids printing of wild chars in search prompt
             break;
         case KEY_DC: // DEL
-            if(selectionCursorPosition!=SELECTION_CURSOR_IN_PROMPT) {
+            if(!hstr->readingFromPipe && selectionCursorPosition!=SELECTION_CURSOR_IN_PROMPT) {
                 almostDead=getResultFromSelection(selectionCursorPosition, hstr, result);
                 msg=malloc(strlen(almostDead)+1);
                 strcpy(msg, almostDead);
@@ -1672,13 +1695,14 @@ void loop_to_select(void)
             if(!isSubshellHint) {
                 editCommand=TRUE;
             } else {
-                // Not setting editCommand to TRUE here,
-                // because else an unnecessary blank line gets emitted before returning to prompt.
+                // not setting editCommand to TRUE here,
+                // because else an unnecessary blank line
+                // gets emitted before returning to prompt
             }
             if(selectionCursorPosition!=SELECTION_CURSOR_IN_PROMPT) {
                 result=getResultFromSelection(selectionCursorPosition, hstr, result);
                 if(hstr->view==HSTR_VIEW_FAVORITES) {
-                    favorites_choose(hstr->favorites,result);
+                    favorites_choose(hstr->favorites, result);
                 }
             } else {
                 result=pattern;
@@ -1721,17 +1745,25 @@ void loop_to_select(void)
     hstr_curses_stop(hstr->keepPage);
 
     if(result!=NULL) {
+        int fd = tty_in ? fileno(tty_in) : 0;
+
         if(fixCommand) {
-            fill_terminal_input("fc \"", FALSE);
+            fill_terminal_input("fc \"", FALSE, fd);
         }
-        fill_terminal_input(result, editCommand);
+        fill_terminal_input(result, editCommand, fd);
         if(fixCommand) {
-            fill_terminal_input("\"", FALSE);
+            fill_terminal_input("\"", FALSE, fd);
         }
         if(executeResult) {
             // TODO w/o TIOCSTI the command is NOT executed, just shown in the prompt
-            fill_terminal_input("\n", FALSE);
+            fill_terminal_input("\n", FALSE, fd);
         }
+    }
+
+    // close the terminal input file opened when HSTR reads history from pipe
+    if(tty_in) {
+        fclose(tty_in);
+        tty_in=NULL;
     }
 }
 
@@ -1756,17 +1788,94 @@ void hstr_assemble_cmdline_pattern(int argc, char* argv[], int startIndex)
     }
 }
 
+static void free_history_state(HISTORY_STATE* historyState)
+{
+    if (!historyState) return;
+
+    if (historyState->entries) {
+        for (int i = 0; i < historyState->length; i++) {
+            if (historyState->entries[i]) {
+                free(historyState->entries[i]->line);
+                free(historyState->entries[i]);
+            }
+        }
+        free(historyState->entries);
+    }
+    free(historyState);
+}
+
 void hstr_interactive(void)
 {
-    hstr->history=prioritized_history_create(hstr->bigKeys, hstr->blacklist.set);
+    HISTORY_STATE* historyState=NULL;
+    if(!isatty(fileno(stdin))) {
+        // load history (or alternative content) from stdin
+        hstr->readingFromPipe=true;
+        int MAX_STDIN_ENTRIES = 2000;
+
+        historyState = malloc(sizeof(HISTORY_STATE));
+        if (!historyState) {
+            fprintf(stderr, "Failed to allocate memory for history state\n");
+            hstr_exit(EXIT_FAILURE);
+        }
+        memset(historyState, 0, sizeof(HISTORY_STATE));
+
+        historyState->entries = malloc(sizeof(HIST_ENTRY*) * MAX_STDIN_ENTRIES);
+        if (!historyState->entries) {
+            fprintf(stderr, "Failed to allocate memory for history entries\n");
+            free_history_state(historyState);
+            hstr_exit(EXIT_FAILURE);
+        }
+
+        char *line = NULL;
+        size_t len = 0;
+        ssize_t read;
+        historyState->length=0;
+        while ((read = getline(&line, &len, stdin)) != -1 && historyState->length < MAX_STDIN_ENTRIES) {
+            if (read > 0 && line[read-1] == '\n') {
+                line[read-1] = '\0';
+            }
+
+            historyState->entries[historyState->length] = malloc(sizeof(HIST_ENTRY));
+            if (!historyState->entries[historyState->length]) {
+                fprintf(stderr, "Failed to allocate memory for history entry\n");
+                free(line);
+                free_history_state(historyState);
+                hstr_exit(EXIT_FAILURE);
+            }
+
+            historyState->entries[historyState->length]->line = strdup(line);
+            if (!historyState->entries[historyState->length]->line) {
+                fprintf(stderr, "Failed to allocate memory for history line\n");
+                free(historyState->entries[historyState->length]);
+                free(line);
+                free_history_state(historyState);
+                hstr_exit(EXIT_FAILURE);
+            }
+
+            historyState->entries[historyState->length]->timestamp = NULL;
+            historyState->entries[historyState->length]->data = NULL;
+
+            historyState->length++;
+        }
+        free(line); // free(NULL) is safe per C standard
+    }
+
+    hstr->history=prioritized_history_create(hstr->bigKeys, hstr->blacklist.set, historyState);
+
+    if(hstr->readingFromPipe) {
+        hstr->pipeHistoryState=historyState;
+    }
+
     if(hstr->history) {
         history_mgmt_open();
         if(hstr->interactive) {
-            loop_to_select();
+            loop_to_select(hstr->readingFromPipe);
         } else {
             stdout_history_and_return();
         }
-        history_mgmt_flush();
+        if(!hstr->readingFromPipe) {
+            history_mgmt_flush();
+        }
     } // else (no history) handled in create() method
 
     hstr_exit(EXIT_SUCCESS);
@@ -1798,7 +1907,7 @@ void hstr_getopt(int argc, char **argv)
             hstr_exit(EXIT_SUCCESS);
             break;
         case 'i':
-            fill_terminal_input(optarg, FALSE);
+            fill_terminal_input(optarg, FALSE, 0);
             hstr_exit(EXIT_SUCCESS);
             break;
         case 'V':

@@ -157,26 +157,32 @@ void tiocsti(void)
 }
 #endif
 
-void fill_terminal_input(char* cmd, bool padding)
+void fill_terminal_input(char* cmd, bool padding, int fd)
 {
     if(cmd && strlen(cmd)>0) {
-            if(is_tiocsti) {
+        if(is_tiocsti) {
             size_t size = strlen(cmd);
             unsigned i;
             char *c;
             for (i = 0; i < size; i++) {
                 // terminal I/O control, simulate terminal input
                 c=(cmd+i);
-                ioctl(0, TIOCSTI, c);
+                ioctl(fd, TIOCSTI, c);
             }
             // echo, but don't flush to terminal
-            if(padding) printf("\n");
+            if(padding) {
+                printf("\n");
+            }
         } else {
+            // non-TIOCSTI mode: always write to stderr (shell wrapper captures it)
             fprintf(stderr, "%s", cmd);
-            if(padding) fprintf(stderr, "%s", "\n");
+            if(padding) {
+                fprintf(stderr, "%s", "\n");
+            }
         }
     }
 }
+
 
 void reverse_char_pointer_array(char **array, unsigned length)
 {

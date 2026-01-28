@@ -89,7 +89,7 @@ bool is_tiocsti_supported(void);
 #if !defined(__MS_WSL__) && !defined(__CYGWIN__)
 void tiocsti(void);
 #endif
-void fill_terminal_input(char* cmd, bool padding);
+void fill_terminal_input(char* cmd, bool padding, int fd);
 void reverse_char_pointer_array(char** array, unsigned length);
 void get_hostname(int bufferSize, char* buffer);
 char* get_home_file_path(char* filename);

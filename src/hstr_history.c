@@ -159,13 +159,16 @@ bool history_mgmt_load_history_file(void)
     return true;
 }
 
-HistoryItems* prioritized_history_create(int optionBigKeys, HashSet *blacklist)
+HistoryItems* prioritized_history_create(int optionBigKeys, HashSet *blacklist, HISTORY_STATE* historyState)
 {
-    using_history();
-    if(!history_mgmt_load_history_file()) {
-        return NULL;
+    if(!historyState) {
+        using_history();
+        if(!history_mgmt_load_history_file()) {
+            return NULL;
+        }
+
+        historyState=history_get_history_state();
     }
-    HISTORY_STATE* historyState=history_get_history_state();
 
     if(historyState->length > 0) {
         HashSet rankmap;
@@ -178,7 +181,7 @@ HistoryItems* prioritized_history_create(int optionBigKeys, HashSet *blacklist)
 
         RankedHistoryItem *r;
         RadixItem *radixItem;
-        HIST_ENTRY **historyList=history_list();
+        HIST_ENTRY **historyList=historyState ? historyState->entries : history_list();
         char **rawHistory=malloc(sizeof(char*) * historyState->length);
         int rawOffset=historyState->length-1, rawTimestamps=0;
         char *line;
@@ -258,12 +261,10 @@ HistoryItems* prioritized_history_create(int optionBigKeys, HashSet *blacklist)
         radixsort_destroy(&rs);
 
         // history/readline cleanup, clear_history() called on exit as entries are used by raw view
-        free(historyState);
         return prioritizedHistory;
     } else {
         // history/readline cleanup, clear_history() called on exit as entries are used by raw view
         printf("No history - nothing to suggest...\n");
-        free(historyState);
         return NULL;
     }
 
@@ -406,6 +407,6 @@ int history_mgmt_remove_from_ranked(char *cmd, HistoryItems *history) {
 void history_mgmt_flush(void)
 {
     if(dirty && !is_zsh_parent_shell()) {
-        fill_terminal_input("history -r\n", false);
+        fill_terminal_input("history -r\n", false, 0);
     }
 }

@@ -16,7 +16,7 @@ Table of contents:
     * Blacklist
     * Delete last command
 * Examples
-  
+
 # Features
 HSTR is typically started by pressing <kbd>Ctrl-r</kbd> after
 you configure it for this shorcut in your shell. However,
@@ -33,22 +33,34 @@ hh
 ```
 
 It opens a page with a history view (ranking view is default).
-Alternatively you can run HSTR in non-interactive mode - 
+Alternatively you can run HSTR in non-interactive mode -
 commands are just listed on standard output based on history
 view:
 
 ```bash
-hh --non-interactive
+hstr --non-interactive
 ```
 
 Filtering pattern can be optionally specified as well:
 
 ```bash
-hh -i git
+hstr -i git
 ```
 
 Prints history items containing `git` to standard output and
 exits.
+
+HSTR can also read text input from a pipe instead of shell
+history, allowing you to interactively browse and filter
+any text data:
+
+```bash
+ls | hstr
+```
+
+This opens HSTR with the output of `ls` command, which you
+can filter and select from. Any command output can be piped
+to HSTR this way.
 
 ## History Filtering
 When HSTR starts in interative mode, a view of commands
@@ -67,13 +79,13 @@ items is highlighted. Once you are done with your choice:
 
 
 ## Favorite Commands
-HSTR allows you to store and manage your favorite 
-commands. 
+HSTR allows you to store and manage your favorite
+commands.
 
 A new favorite command can be added from
 ranking or raw history view by pressing <kbd>Ctrl-f</kbd>.
 
-You can check your favorite commands by choosing 
+You can check your favorite commands by choosing
 favorite view - rotate views using <kbd>Ctrl-/</kbd> or start
 HSTR by adding `favorites-view` to `HSTR_CONFIG` environment
 property. A favorite command can be choosen just
@@ -104,8 +116,8 @@ printf "\e[?2004l" # fix broken copy/paste in terminal #TERM
 ## Blacklist
 HSTR allows you to specify a set of commands to be
 skipped from all the views. Blacklist typically contains
-frequently used commands whose completion from history 
-has a little or no value. The default blacklist looks 
+frequently used commands whose completion from history
+has a little or no value. The default blacklist looks
 like this:
 
 ```bash
@@ -125,7 +137,7 @@ Tips:
 * You can skip any command from history just by
   prefixing it with `SPACE`. For example:
   ` echo "Skip this from history"` It's a `bash`
-  option that is configured using 
+  option that is configured using
   `HISTCONTROL=ignorespace` environment variable.
 
 
@@ -148,8 +160,8 @@ Get more colors when running HSTR:
 export HSTR_CONFIG=hicolor
 ```
 
-Start HSTR in configured view and filter out history items 
-containing 'git' (make sure `hh` is defined using 
+Start HSTR in configured view and filter out history items
+containing 'git' (make sure `hh` is defined using
 [alias](../CONFIGURATION.md#alias)):
 
 ```bash
@@ -172,4 +184,10 @@ Check HSTR man page:
 
 ```bash
 man hstr
+```
+
+Browse output of any command interactively:
+
+```bash
+ls -la | hh
 ```

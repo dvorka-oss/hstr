@@ -1,6 +1,5 @@
 /*
  hstr_curses.c   Curses utilities
-                 http://pueblo.sourceforge.net/doc/manual/ansi_color_codes.html
 
  Copyright (C) 2014-2026 Martin Dvorak <martin.dvorak@mindforger.com>
 
@@ -19,11 +18,33 @@
 
 #include "include/hstr_curses.h"
 
+// http://pueblo.sourceforge.net/doc/manual/ansi_color_codes.html
 static bool terminalHasColors=FALSE;
 
-void hstr_curses_start(void)
-{
-    initscr();
+FILE* hstr_curses_start(bool ttyInit) {
+    FILE *tty_in = NULL;
+
+    // if HSTR is reading input from pipe, then ncurses must be initialized with /dev/tty
+    if(ttyInit) {
+        SCREEN *screen;
+
+        tty_in = fopen("/dev/tty", "r+");
+        if (!tty_in) {
+            perror("Could not open /dev/tty prior to curses initialization");
+            return NULL;
+        }
+
+        screen = newterm(NULL, stdout, tty_in);
+        if (!screen) {
+            fprintf(stderr, "Error initializing curses when HSTR is reading from pipe");
+            fclose(tty_in);
+            return NULL;
+        }
+        set_term(screen);
+    } else {
+        initscr();
+    }
+
     keypad(stdscr, TRUE);
     noecho();
     nonl(); // prevent carriage return from being mapped to newline
@@ -42,6 +63,8 @@ void hstr_curses_start(void)
      */
     set_escdelay(5);
 #endif
+
+    return tty_in;
 }
 
 bool terminal_has_colors(void) {

@@ -1,8 +1,8 @@
-2026-01-24  Martin Dvorak  <martin.dvorak@mindforger.com>
+2026-01-26  Martin Dvorak  <martin.dvorak@mindforger.com>
 
   * Released v3.2.0 - Minor release bringing:
-    - STDIN handling
-    - Configuration for TIOCSTI enforcement
+    - HSTR can newly read from pipe / stdin instead of just shell history
+    - Enforcement of the HSTR configuration in case of TIOCSTI is not available
 
 2023-04-18  Martin Dvorak  <martin.dvorak@mindforger.com>
 
