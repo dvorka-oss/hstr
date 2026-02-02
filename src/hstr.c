@@ -141,7 +141,7 @@
 
 // semantic versioning: major.minor.revision
 static const char* VERSION_STRING=
-        "hstr version \"3.2.0\" (2026-01-29T07:24:00)"
+        "hstr version \"3.2.0\" (2026-02-02T23:08:00)"
         "\n";
 
 static const char* HSTR_VIEW_LABELS[]={
@@ -1740,13 +1740,19 @@ void hstr_assemble_cmdline_pattern(int argc, char* argv[], int startIndex)
 {
     if(argc>0) {
         int i;
+        size_t cmdlineLen = strlen(hstr->cmdline);
         for(i=startIndex; i<argc; i++) {
-            // account for argv[i] + potential space; reserve 1 byte for final null terminator
+            size_t argLen = strlen(argv[i]);
+            // account for argv[i] + potential space + null terminator
             size_t spaceNeeded = (i+1<argc) ? 1 : 0;
-            if((strlen(hstr->cmdline)+strlen(argv[i])+spaceNeeded+1)>CMDLINE_LNG) break;
-            strcat(hstr->cmdline, argv[i]);
-            if((i+1<argc)) {
-                strcat(hstr->cmdline, " ");
+            if(cmdlineLen + argLen + spaceNeeded + 1 > CMDLINE_LNG) break;
+
+            strcpy(hstr->cmdline + cmdlineLen, argv[i]);
+            cmdlineLen += argLen;
+
+            if(i+1<argc) {
+                hstr->cmdline[cmdlineLen++] = ' ';
+                hstr->cmdline[cmdlineLen] = '\0';
             }
         }
     }
