@@ -4,7 +4,7 @@
     - Configuration for TIOCSTI enforcement
     - Added SIGQUIT handling to cleanup terminal state on quit
     - Fixed buffer overflow (window resize) and missing Bash autocomplete configuration
-    - Fixed undesired encapsulation of patterns with quotes in case it contains spaces
+    - Fixed undesired encapsulation of patterns with quotes in case they contain spaces
     - Updated changelog layout
 
 2023-04-18  Martin Dvorak  <martin.dvorak@mindforger.com>
