@@ -1741,9 +1741,9 @@ void hstr_assemble_cmdline_pattern(int argc, char* argv[], int startIndex)
     if(argc>0) {
         int i;
         for(i=startIndex; i<argc; i++) {
-            // account for argv[i] + potential space + null terminator
-            size_t spaceNeeded = (i+1<argc) ? 2 : 1;
-            if((strlen(hstr->cmdline)+strlen(argv[i])+spaceNeeded)>CMDLINE_LNG) break;
+            // account for argv[i] + potential space; reserve 1 byte for final null terminator
+            size_t spaceNeeded = (i+1<argc) ? 1 : 0;
+            if((strlen(hstr->cmdline)+strlen(argv[i])+spaceNeeded+1)>CMDLINE_LNG) break;
             strcat(hstr->cmdline, argv[i]);
             if((i+1<argc)) {
                 strcat(hstr->cmdline, " ");
