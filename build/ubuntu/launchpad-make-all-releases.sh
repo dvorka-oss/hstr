@@ -247,7 +247,9 @@ function releaseForParticularUbuntuVersion() {
     export PBUILDFOLDER=/tmp/hstr-tmp
     rm -rvf ${PBUILDFOLDER}
     mkdir -p ${PBUILDFOLDER}
-    cp -rvf ~/pbuilder/*.tgz ${PBUILDFOLDER}
+    if [ -d ~/.cache/pbuilder ]; then
+        cp -rvf ~/.cache/pbuilder/*-${UBUNTUVERSION}-*.tgz ${PBUILDFOLDER}/ 2>/dev/null || true
+    fi
     # END
     pbuilder-dist ${UBUNTUVERSION} build ${HSTRRELEASE}.dsc
 

@@ -24,6 +24,13 @@
 HSTR_VERSION := $(shell grep 'hstr version' ../src/hstr.c | sed 's/.*hstr version \\"\([^\\]*\)\\".*/\1/')
 
 #
+# CMD
+#
+
+DIFF := colordiff -u
+
+
+#
 # HELP
 #
 
@@ -62,10 +69,13 @@ clean: ## clean build artifacts
 # BUILD
 #
 
-build-dev: clean ## clean, configure, and build HSTR
+../src/hstr:
 	cd ./tarball && ./tarball-automake.sh && cd ../.. && ./configure && make all
 
-build: build-dev ## clean, configure, and build HSTR
+build-dev: clean ../src/hstr ## clean, configure, and build HSTR
+	@echo "HSTR $(HSTR_VERSION) built for development"
+
+build: ../src/hstr ## clean, configure, and build HSTR
 	strip ../src/hstr
 
 #
@@ -73,8 +83,14 @@ build: build-dev ## clean, configure, and build HSTR
 #
 
 .PHONY: run-dev
-run-dev: ## run HSTR for development
-	cd .. && make clean all && cd build && ../src/hstr
+run-dev: build-dev ## run HSTR for development
+	../src/hstr
+
+run: ../src/hstr ## run HSTR
+	../src/hstr
+
+run-web: ## run HSTR web preview
+	cd ../web && python3 -m http.server 8000
 
 #
 # TEST
@@ -99,3 +115,14 @@ install-personal: build ## install HSTR for personal user
 	@cp -vf ../src/hstr $(HOME)/bin
 	@echo "HSTR $(HSTR_VERSION) installed to $(HOME)/bin"
 	hstr --version
+
+#
+# package
+#
+
+.PHONY: .
+releng-ubuntu: ## release launchpad package for Ubuntu
+	@echo "= Diff ============================"
+	$(DIFF) ./ubuntu/launchpad-make-all-releases.sh ~/p/hstr/launchpad/launchpad-make-all-releases.sh || true
+	@echo "= Script ============================"
+	cd ~/p/hstr/launchpad && ./launchpad-make-all-releases.sh

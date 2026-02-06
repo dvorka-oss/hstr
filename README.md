@@ -6,7 +6,7 @@
 [![All releases downloads](https://img.shields.io/github/downloads/dvorka/hstr/total.svg)](https://github.com/dvorka/hstr/releases)
 [![License](https://img.shields.io/github/license/dvorka/hstr?color=%23fe0000)](https://github.com/dvorka/hstr/blob/master/LICENSE)
 
-Easily view, navigate and search your **command history** with shell history suggest box for
+Easily view, navigate and search your **command history** with shell history TUI suggest box for
 [bash](https://www.gnu.org/software/bash/) and [zsh](CONFIGURATION.md#zsh-history-settings).
 
 [![Shell History Suggest Box](doc/hstr-v2.gif "Shell History Suggest Box @ YouTube")](http://www.youtube.com/watch?v=sPF29NyXe2U)
@@ -31,7 +31,7 @@ or **bookmark** your favorite commands.
 
 <table><tr><td>
   <a href="https://repology.org/project/hstr/versions">
-    <img src="https://repology.org/badge/vertical-allrepos/hstr.svg" alt="Packaging status" align="left">
+    <img src="https://repology.org/badge/vertical-allrepos/hstr.svg?columns=4" alt="Packaging status" align="left">
   </a>
 </td></tr></table>
 
