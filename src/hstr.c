@@ -460,6 +460,7 @@ void print_bash_install_code(void)
 #endif
         );
         printf("\nexport HSTR_TIOCSTI=n");
+        // note: due to Bash 'bind -x' limitations, users need to press ENTER twice on row insertion
     }
 
     printf("\n\n");
@@ -485,10 +486,18 @@ void print_zsh_install_code(void)
 #endif
 
         "\n    zle -I"
-        "\n    { HSTR_OUT=\"$( { </dev/tty hstr -- ${BUFFER}; } 2>&1 1>&3 3>&- )\"; } 3>&1;"
-        "\n    BUFFER=\"${HSTR_OUT}\""
-        "\n    CURSOR=${#BUFFER}"
-        "\n    zle redisplay"
+        "\n    { HSTR_OUT=\"$( { </dev/tty hstr -- ${BUFFER}; echo -n x >&2; } 2>&1 1>&3 3>&-; )\"; } 3>&1;"
+        "\n    HSTR_OUT=\"${HSTR_OUT%%x}\""
+        "\n    if [[ \"${HSTR_OUT}\" == *$'\\n' ]]; then"
+        "\n        BUFFER=\"${HSTR_OUT%%$'\\n'}\""
+        "\n        CURSOR=${#BUFFER}"
+        "\n        zle redisplay"
+        "\n        zle accept-line"
+        "\n    else"
+        "\n        BUFFER=\"${HSTR_OUT}\""
+        "\n        CURSOR=${#BUFFER}"
+        "\n        zle redisplay"
+        "\n    fi"
         "\n}"
 
 #if defined(__MS_WSL__)

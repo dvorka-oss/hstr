@@ -1,5 +1,21 @@
 #!/usr/bin/env bash
-# This script is used to experiment with Bash functions in order to set 
+#
+# Copyright (C) 2014-2026 Martin Dvorak <martin.dvorak@mindforger.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# This script is used to experiment with Bash functions in order to set
 # the content of the terminal prompt without TIOCSTI ioctl() call.
 #
 # IMPORTANT: to use the functions below @ Bash
@@ -42,7 +58,7 @@ function mysimple {
     # HSTR prints out command which user selected after using ^
     # ^ is set to READLINE_LINE
     # prompt cursor is set to the end of line by setting READLINE_POINT to 1000 (blindly)
-    
+
     { READLINE_LINE=$(foohstr ${PROMPT_STR_BEFORE}) 2>&1; }
     # move cursor to the end of prompt
     READLINE_POINT=${#READLINE_LINE}
@@ -60,7 +76,7 @@ function hstrdebug {
     echo "Readline point: '${READLINE_POINT}'"
 
     READLINE_POINT=0
-    
+
     # OBSERVATIONS:
     #   {hstrout}>&1   ... is VALID expression
     #   {hstrout} > &1 ... is INVALID expression
@@ -91,7 +107,7 @@ function hstrdebug {
 #
 
 # bind '"\C-r": "\C-a hstr -- \C-j"'
-# - bind   
+# - bind
 #   ... Bash command which binds key sequence (Ctrl-r) to a command,
 #       bind INSERTS the command to the terminal
 # - "\C-r"
@@ -194,5 +210,11 @@ function hstrnotiocsti {
 }
 if [[ $- =~ .*i.* ]]; then bind -x '"\C-r": "hstrnotiocsti"'; fi
 export HSTR_TIOCSTI=n
+
+# NOTE: Due to bash 'bind -x' limitations, commands cannot be auto-executed
+# from the bind function. You need to press ENTER twice: once to select
+# in HSTR, and once more to execute the command. This is a known bash
+# limitation that cannot be worked around. ZSH users can use 'zle accept-line'
+# to auto-execute commands.
 
 # eof

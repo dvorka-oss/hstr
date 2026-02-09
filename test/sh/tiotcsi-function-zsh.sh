@@ -1,4 +1,19 @@
 #!/usr/bin/env bash
+#
+# Copyright (C) 2014-2026 Martin Dvorak <martin.dvorak@mindforger.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 # ##################################################################
 # EXAMPLE: NOT WORKING version
@@ -26,16 +41,16 @@ foohstr() {
 
 hstrnotiocsti() {
   local word
-  # we need the WHOLE buffer, not just 0 to cursor: word=${BUFFER[0,CURSOR]}                                                                       
+  # we need the WHOLE buffer, not just 0 to cursor: word=${BUFFER[0,CURSOR]}
   BUFFER="$(foohstr ${BUFFER})"
   CURSOR=${#BUFFER}
-  # update the display                                                                                                                             
+  # update the display
   zle redisplay
 }
 
-# create ZLE widget ~ readline function                                                                                                            
+# create ZLE widget ~ readline function
 zle -N hstrnotiocsti
-# bind widget to keyboard shortcut                                                                                                                 
+# bind widget to keyboard shortcut
 bindkey '\C-r' hstrnotiocsti
 
 # ##################################################################
@@ -87,10 +102,18 @@ export HSTR_TIOCSTI=n
 
 hstr_no_tiocsti() {
     zle -I
-    { HSTR_OUT="$( { </dev/tty hstr ${BUFFER}; } 2>&1 1>&3 3>&- )"; } 3>&1;
-    BUFFER="${HSTR_OUT}"
-    CURSOR=${#BUFFER}
-    zle redisplay
+    { HSTR_OUT="$( { </dev/tty hstr ${BUFFER}; echo -n x >&2; } 2>&1 1>&3 3>&-; )"; } 3>&1;
+    HSTR_OUT="${HSTR_OUT%x}"
+    if [[ "${HSTR_OUT}" == *$'\n' ]]; then
+        BUFFER="${HSTR_OUT%$'\n'}"
+        CURSOR=${#BUFFER}
+        zle redisplay
+        zle accept-line
+    else
+        BUFFER="${HSTR_OUT}"
+        CURSOR=${#BUFFER}
+        zle redisplay
+    fi
 }
 zle -N hstr_no_tiocsti
 bindkey '\C-r' hstr_no_tiocsti
